@@ -1,0 +1,18 @@
+# === Hauban IA Watch - Gitignore ===
+
+# Ne JAMAIS pousser le fichier contenant les accès Google
+google-credentials.json
+
+# Dossiers inutiles
+__pycache__/
+*.pyc
+
+# Environnement virtuel éventuel
+venv/
+.env/
+
+# Fichiers système Mac (éventuels)
+.DS_Store
+
+# Rapport généré automatiquement
+hauban_ai_watch_report.html
