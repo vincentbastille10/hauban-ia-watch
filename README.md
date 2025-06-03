@@ -39,6 +39,24 @@ You will then receive your first report the next morning!
 - Email System: Mailjet SMTP
 - News Sources: TechCrunch, VentureBeat, Reddit, GitHub, Hugging Face, ArXiv
 
+### Environment Variables
+
+Copy `.env.example` to `.env` and fill in your API keys and configuration values:
+
+```
+cp .env.example .env
+```
+
+The script reads the following variables:
+
+- `TOGETHER_API_KEY`
+- `TOGETHER_MODEL`
+- `MAILJET_API_KEY`
+- `MAILJET_SECRET_KEY`
+- `EMAIL_FROM`
+- `GOOGLE_SHEET_URL`
+- `SERVICE_ACCOUNT_FILE`
+
 ---
 
 ## ⚠️ Terms of Service
