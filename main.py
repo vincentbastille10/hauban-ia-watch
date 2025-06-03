@@ -1,8 +1,7 @@
+import os
 import requests
 import smtplib
 import datetime
-import base64
-import csv
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from bs4 import BeautifulSoup
@@ -24,19 +23,20 @@ SOURCES = [
 ]
 
 HEADERS = {"User-Agent": "Mozilla/5.0"}
-NB_INFOS = 5  # Limité à 5 actus
+NB_INFOS = int(os.getenv("NB_INFOS", 5))  # Limité à 5 actus par défaut
 HTML_OUTPUT_PATH = "hauban_ai_watch_report.html"
-TOGETHER_API_KEY = "tgp_v1_SqShGD9hKF8X5dOXKX7fvyBwjVaChBBaS6f50Jij5RU"
-TOGETHER_MODEL = "mistralai/Mixtral-8x7B-Instruct-v0.1"
-MAILJET_API_KEY = "e51d0fef891dc4ba270077871341767c"
-MAILJET_SECRET_KEY = "2041777d4c316f65e38596d73e709b32"
-EMAIL_FROM = "spectramediabots@gmail.com"
-GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1-JLDxbW5RQukZk4o_imik0UsjIMI-bgrRlnNNyzicpo"
-SERVICE_ACCOUNT_FILE = "google-credentials.json"
+TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
+TOGETHER_MODEL = os.getenv("TOGETHER_MODEL", "mistralai/Mixtral-8x7B-Instruct-v0.1")
+MAILJET_API_KEY = os.getenv("MAILJET_API_KEY")
+MAILJET_SECRET_KEY = os.getenv("MAILJET_SECRET_KEY")
+EMAIL_FROM = os.getenv("EMAIL_FROM")
+GOOGLE_SHEET_URL = os.getenv("GOOGLE_SHEET_URL")
+SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE", "google-credentials.json")
 
 # === FONCTIONS ===
 
 def fetch_url(url):
+    """Return the HTML content of the given URL or an empty string on error."""
     try:
         response = requests.get(url, headers=HEADERS, timeout=10)
         response.raise_for_status()
@@ -46,6 +46,7 @@ def fetch_url(url):
         return ""
 
 def extract_info():
+    """Scrape configured sources and return a list of news items."""
     results = []
     today = datetime.datetime.now()
     seven_days_ago = today - datetime.timedelta(days=7)
@@ -103,6 +104,7 @@ def extract_info():
     return results[:NB_INFOS]
 
 def summarize_text(text):
+    """Use the Together API to summarize a news headline in French."""
     prompt = f"Résume en français cette actualité IA en trois lignes : {text}"
     try:
         response = requests.post(
@@ -124,6 +126,7 @@ def summarize_text(text):
         return "Résumé indisponible."
 
 def generate_html_report(data):
+    """Create the HTML report file from the provided list of news items."""
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     html = f"<html><head><meta charset='UTF-8'><title>Hauban IA Watch</title></head><body>"
     html += f"<h1>Rapport Hauban IA Watch – {now}</h1><ul>"
@@ -140,6 +143,7 @@ def generate_html_report(data):
     print("✅ Rapport généré :", HTML_OUTPUT_PATH)
 
 def get_emails_from_google_sheet():
+    """Retrieve subscriber emails from the configured Google Sheet."""
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
     creds = ServiceAccountCredentials.from_json_keyfile_name(SERVICE_ACCOUNT_FILE, scope)
     client = gspread.authorize(creds)
@@ -148,6 +152,7 @@ def get_emails_from_google_sheet():
     return [email for email in emails if "@" in email]
 
 def send_email(file_path, recipients):
+    """Send the HTML report to each email in the recipient list."""
     with open(file_path, "r", encoding="utf-8") as f:
         html_content = f.read()
 
